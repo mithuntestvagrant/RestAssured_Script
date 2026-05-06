@@ -2,8 +2,10 @@ package apiTest;
 
 import api.Endpoint;
 import io.restassured.response.Response;
+import org.testng.Assert;
 import org.testng.annotations.Test;
-import pojo.User;
+import pojo.UserRequest;
+import pojo.UserResponse;
 
 import static io.restassured.RestAssured.given;
 
@@ -11,13 +13,15 @@ public class TestScript {
 
     BaseClass base = new BaseClass();
 
-    @Test
-    public void fullCrudFlow() {
+    String userId;
 
-        // ======================
-        // 1️⃣ POST - CREATE
-        // ======================
-        User user = new User("morpheus", "leader");
+    // ======================
+    // 1️⃣ POST
+    // ======================
+    @Test(priority = 1)
+    public void createUserTest() {
+
+        UserRequest user = new UserRequest("morpheus", "leader");
 
         Response postRes =
                 given()
@@ -26,25 +30,45 @@ public class TestScript {
                         .when()
                         .post(Endpoint.POST_USER);
 
-        System.out.println("POST RESPONSE:");
-        System.out.println(postRes.asString());
+        Assert.assertEquals(postRes.statusCode(), 201);
 
-        // ======================
-        // 2️⃣ GET - READ
-        // ======================
+        UserResponse postResponse = postRes.as(UserResponse.class);
+
+        System.out.println("POST ID: " + postResponse.getId());
+
+        Assert.assertEquals(postResponse.getName(), "morpheus");
+        Assert.assertEquals(postResponse.getJob(), "leader");
+        Assert.assertNotNull(postResponse.getId());
+
+        userId = postResponse.getId();
+    }
+
+    // ======================
+    // 2️⃣ GET
+    // ======================
+    @Test(priority = 2, dependsOnMethods = "createUserTest")
+    public void getUserTest() {
+
         Response getRes =
                 given()
                         .spec(base.getRequestSpec())
                         .when()
                         .get(Endpoint.GET_USER);
 
-        System.out.println("GET RESPONSE:");
-        System.out.println(getRes.asString());
+        Assert.assertEquals(getRes.statusCode(), 200);
 
-        // ======================
-        // 3️⃣ PUT - FULL UPDATE
-        // ======================
-        User putUser = new User("neo", "zion resident");
+        System.out.println("GET RESPONSE: " + getRes.asString());
+
+        Assert.assertNotNull(getRes.jsonPath().getString("data.id"));
+    }
+
+    // ======================
+    // 3️⃣ PUT
+    // ======================
+    @Test(priority = 3, dependsOnMethods = "createUserTest")
+    public void putUserTest() {
+
+        UserRequest putUser = new UserRequest("neo", "zion resident");
 
         Response putRes =
                 given()
@@ -53,13 +77,21 @@ public class TestScript {
                         .when()
                         .put(Endpoint.PUT_USER);
 
-        System.out.println("PUT RESPONSE:");
-        System.out.println(putRes.asString());
+        Assert.assertEquals(putRes.statusCode(), 200);
 
-        // ======================
-        // 4️⃣ PATCH - PARTIAL UPDATE
-        // ======================
-        User patchUser = new User();
+        UserResponse putResponse = putRes.as(UserResponse.class);
+
+        Assert.assertEquals(putResponse.getName(), "neo");
+        Assert.assertEquals(putResponse.getJob(), "zion resident");
+    }
+
+    // ======================
+    // 4️⃣ PATCH
+    // ======================
+    @Test(priority = 4)
+    public void patchUserTest() {
+
+        UserRequest patchUser = new UserRequest();
         patchUser.setJob("QA Lead");
 
         Response patchRes =
@@ -69,19 +101,27 @@ public class TestScript {
                         .when()
                         .patch(Endpoint.PATCH_USER);
 
-        System.out.println("PATCH RESPONSE:");
-        System.out.println(patchRes.asString());
+        Assert.assertEquals(patchRes.statusCode(), 200);
 
-        // ======================
-        // 5️⃣ DELETE
-        // ======================
+        UserResponse patchResponse = patchRes.as(UserResponse.class);
+
+        Assert.assertEquals(patchResponse.getJob(), "QA Lead");
+    }
+
+    // ======================
+    // 5️⃣ DELETE
+    // ======================
+    @Test(priority = 5)
+    public void deleteUserTest() {
+
         Response deleteRes =
                 given()
                         .spec(base.getRequestSpec())
                         .when()
                         .delete(Endpoint.DELETE_USER);
 
-        System.out.println("DELETE STATUS:");
-        System.out.println(deleteRes.statusCode());
+        Assert.assertTrue(
+                deleteRes.statusCode() == 200 || deleteRes.statusCode() == 204
+        );
     }
 }
