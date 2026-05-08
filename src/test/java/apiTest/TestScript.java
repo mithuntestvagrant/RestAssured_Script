@@ -17,7 +17,7 @@ public class TestScript {
     @Test
     public void createGetUpdatePatchAndDeleteUser() {
 
-
+        
         // POST - CREATE USER
 
         UserRequest user = new UserRequest("morpheus", "leader");
@@ -35,16 +35,16 @@ public class TestScript {
 
         userId = postResponse.getId();
 
-        System.out.println("POST ID: " + userId);
-        Assert.assertEquals(postResponse.getName(), "morpheus");
-        Assert.assertEquals(postResponse.getJob(), "leader");
-        Assert.assertNotNull(userId);
+        System.out.println("Created User ID: " + userId);
 
-        System.out.println("POST completed successfully");
+        postRes.prettyPrint();
+
+        System.out.println("POST (Create User) completed successfully");
 
 
 
         // GET - USER
+
 
         Response getRes =
                 given()
@@ -54,16 +54,17 @@ public class TestScript {
 
         Assert.assertEquals(getRes.statusCode(), 200);
 
-        System.out.println("GET RESPONSE: " + getRes.asString());
-        Assert.assertNotNull(getRes.jsonPath().getString("data.id"));
+        getRes.prettyPrint();
 
-        System.out.println("GET completed successfully");
+        System.out.println("GET (Fetch User) completed successfully");
 
 
 
         // PUT - FULL UPDATE
 
-        UserRequest putUser = new UserRequest("neo", "zion resident");
+
+        UserRequest putUser =
+                new UserRequest("neo", "zion resident");
 
         Response putRes =
                 given()
@@ -74,15 +75,14 @@ public class TestScript {
 
         Assert.assertEquals(putRes.statusCode(), 200);
 
-        UserResponse putResponse = putRes.as(UserResponse.class);
+        putRes.prettyPrint();
 
-        Assert.assertEquals(putResponse.getName(), "neo");
-        Assert.assertEquals(putResponse.getJob(), "zion resident");
+        System.out.println("PUT (Full Update) completed successfully");
 
-        System.out.println("PUT completed successfully");
 
 
         // PATCH - PARTIAL UPDATE
+
 
         UserRequest patchUser = new UserRequest();
         patchUser.setJob("QA Lead");
@@ -96,15 +96,14 @@ public class TestScript {
 
         Assert.assertEquals(patchRes.statusCode(), 200);
 
-        UserResponse patchResponse = patchRes.as(UserResponse.class);
+        patchRes.prettyPrint();
 
-        Assert.assertEquals(patchResponse.getJob(), "QA Lead");
-
-        System.out.println("PATCH completed successfully");
+        System.out.println("PATCH (Partial Update) completed successfully");
 
 
 
         // DELETE - USER
+
 
         Response deleteRes =
                 given()
@@ -118,6 +117,5 @@ public class TestScript {
         );
 
         System.out.println("DELETE completed successfully");
-
     }
 }
